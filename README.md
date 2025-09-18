@@ -8,6 +8,12 @@ A PHP project for working with flexible data objects, supporting dynamic propert
 - **Array Initialization:** Instantiate objects with an associative array of properties.
 - **Extensible:** Create your own data object classes by extending the base `DataObject`.
 
+## Installation
+
+```shell
+composer require chriha/data-objects
+```
+
 ## Example Usage
 
 ```php
