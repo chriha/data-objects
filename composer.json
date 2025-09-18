@@ -1,0 +1,39 @@
+{
+    "name": "chriha/data-objects",
+    "description": "A PHP package to create immutable data objects with validation and transformation capabilities.",
+    "type": "library",
+    "require": {
+        "php": "^8.3",
+        "nesbot/carbon": "^3.8.4",
+        "illuminate/collections": "^11.46|^12.26",
+        "illuminate/support": "^11.46|^12.26",
+        "illuminate/validation": "^11.46|^12.26",
+        "illuminate/translation": "^11.46|^12.26"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.24",
+        "pestphp/pest": "^4.0",
+        "symfony/var-dumper": "^7.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Chriha\\DataObjects\\": "src/",
+            "Tests\\": "tests/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Christopher Hartmann",
+            "email": "hello@chriha.de"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
