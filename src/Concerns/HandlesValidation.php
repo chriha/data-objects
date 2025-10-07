@@ -24,6 +24,10 @@ trait HandlesValidation
         $rules = [];
 
         foreach ($reflect->getProperties() as $property) {
+            if ($this->shouldIgnoreProperty($property)) {
+                continue;
+            }
+
             $inputKey = $this->determineInputKey($property, $reflect);
 
             if (! $this->hasAttribute($property, Rules::class)) {
