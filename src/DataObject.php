@@ -2,6 +2,7 @@
 
 namespace Chriha\DataObjects;
 
+use Chriha\DataObjects\Attributes\HandledBy;
 use Chriha\DataObjects\Concerns\HandlesAttributes;
 use Chriha\DataObjects\Concerns\HandlesCasts;
 use Chriha\DataObjects\Concerns\HandlesTransformations;
@@ -11,6 +12,7 @@ use Chriha\DataObjects\Attributes\Ignore;
 use Chriha\DataObjects\Attributes\MapFrom;
 use Chriha\DataObjects\Attributes\MapFromOneOf;
 use Chriha\DataObjects\Exceptions\FailedStrictPropertiesException;
+use Chriha\DataObjects\Exceptions\MissingHandlerMethodException;
 use Chriha\DataObjects\Exceptions\NoMappingKeyFoundException;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
@@ -18,6 +20,7 @@ use Illuminate\Support\Collection;
 use ReflectionClass;
 use ReflectionParameter;
 use ReflectionProperty;
+use RuntimeException;
 
 abstract class DataObject implements Arrayable
 {
@@ -166,6 +169,12 @@ abstract class DataObject implements Arrayable
             return;
         }
 
+        if ($this->hasAttribute($property, HandledBy::class)) {
+            $this->handlePropertyByMethod($property);
+
+            return;
+        }
+
         $inputKey = $this->determineInputKey($property, $reflect);
 
         $this->setProperty($property, $inputKey, $reflect);
@@ -184,6 +193,19 @@ abstract class DataObject implements Arrayable
         if ($this->hasAttribute($property, MapFromOneOf::class)) {
             return $this->getMapFromOneOfKey($property, $reflect);
         }
+
+        //if ($this->hasAttribute($property, HandledBy::class)) {
+        //    $method = $this->getAttribute($property, HandledBy::class)->method;
+        //
+        //    if (! method_exists($this, $method)) {
+        //        throw new MissingHandlerMethodException(
+        //            "Method [$method] to handle property [{$property->getName()}] "
+        //            . "does not exist on " . static::class
+        //        );
+        //    }
+        //
+        //    return $this->{$method}();
+        //}
 
         return $property->getName();
     }
@@ -232,5 +254,24 @@ abstract class DataObject implements Arrayable
         }
 
         return $this->getPromotedProperty($property, $class)?->getDefaultValue();
+    }
+
+    /**
+     * @param ReflectionProperty $property
+     * @return void
+     * @throws MissingHandlerMethodException
+     */
+    protected function handlePropertyByMethod(ReflectionProperty $property): void
+    {
+        $method = $this->getAttribute($property, HandledBy::class)->method;
+
+        if (! method_exists($this, $method)) {
+            throw new MissingHandlerMethodException(
+                "Method [$method] to handle property [{$property->getName()}] "
+                . "does not exist on " . static::class
+            );
+        }
+
+        $this->{$property->getName()} = $this->{$method}();
     }
 }
