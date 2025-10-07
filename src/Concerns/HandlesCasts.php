@@ -2,18 +2,20 @@
 
 namespace Chriha\DataObjects\Concerns;
 
-use Chriha\DataObjects\Attributes\CollectionOf;
-use Chriha\DataObjects\Attributes\WithoutTrimming;
-use Chriha\DataObjects\DataObject;
 use BackedEnum;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Chriha\DataObjects\Attributes\CollectionOf;
+use Chriha\DataObjects\Attributes\WithoutTrimming;
+use Chriha\DataObjects\DataObject;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Fluent;
 use InvalidArgumentException;
+use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
+use Throwable;
 
 /**
  * @mixin HandlesAttributes
@@ -36,10 +38,19 @@ trait HandlesCasts
         return enum_exists($typeName) || class_exists($typeName);
     }
 
-    protected function castToSingleType(mixed $value, ReflectionProperty $property)
+    protected function castToSingleType(mixed $value, ReflectionProperty $property): mixed
     {
         /** @var ReflectionNamedType $type */
         $type = $property->getType();
+
+        return $this->handleCasting($property, $value, $type);
+    }
+
+    protected function handleCasting(
+        ReflectionProperty $property,
+        mixed $value,
+        ReflectionNamedType $type,
+    ): mixed {
         $typeName = $type->getName();
 
         return match (true) {
@@ -173,17 +184,40 @@ trait HandlesCasts
 
     /**
      * @return DataObject|BackedEnum|Collection|mixed|null
+     * @throws Throwable
      */
     protected function castUnionType(mixed $value, ReflectionProperty $property, ReflectionUnionType $type): mixed
     {
+        $latestException = null;
+        $castedValue = null;
+
         // assuming nullable types or a mix of types
         foreach ($type->getTypes() as $typeOption) {
+            if ($typeOption instanceof ReflectionIntersectionType) {
+                return $value;
+            }
+
             if ($this->isCastableType($typeOption)) {
-                return $this->castToSingleType($value, $property);
+                try {
+                    $castedValue = $this->handleCasting(
+                        $property,
+                        $value,
+                        $typeOption
+                    );
+                } catch (Throwable $e) {
+                    /** @var Throwable $latestException */
+                    $latestException = $e;
+                }
+            }
+
+            if (! is_null($castedValue)) {
+                return $castedValue;
             }
         }
 
-        return $value;
+        return $latestException instanceof Throwable
+            ? throw $latestException
+            : $value;
     }
 
     /** Cast a value to a built-in PHP type. */
