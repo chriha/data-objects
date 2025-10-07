@@ -18,10 +18,9 @@ trait HandlesTransformations
      */
     protected function transformValue($value, ReflectionProperty $property): mixed
     {
-        $value = $value === '' ? null : $value;
-
         if (is_string($value)) {
             $value = trim($value);
+            $value = $value === '' ? null : $value;
         }
 
         if (! $this->hasAttribute($property, TransformWith::class)) {
