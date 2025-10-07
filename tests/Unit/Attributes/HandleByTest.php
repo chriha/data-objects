@@ -6,11 +6,9 @@
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
  */
 
-use Chriha\DataObjects\Attributes\CollectionOf;
 use Chriha\DataObjects\Attributes\HandledBy;
 use Chriha\DataObjects\DataObject;
 use Chriha\DataObjects\Exceptions\MissingHandlerMethodException;
-use Illuminate\Support\Collection;
 
 // Simple concrete DataObject for testing
 class HandledPerson extends DataObject

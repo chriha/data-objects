@@ -20,7 +20,6 @@ use Illuminate\Support\Collection;
 use ReflectionClass;
 use ReflectionParameter;
 use ReflectionProperty;
-use RuntimeException;
 
 abstract class DataObject implements Arrayable
 {
