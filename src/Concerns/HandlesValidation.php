@@ -10,6 +10,7 @@ use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory as ValidationFactory;
 use Illuminate\Validation\Validator;
 use ReflectionClass;
+use ReflectionException;
 
 /**
  * @mixin DataObject
@@ -52,16 +53,55 @@ trait HandlesValidation
     {
         $loader = new ArrayLoader();
 
-        // Load Laravel's validation messages
-        $validationPath = dirname(__DIR__, 2) . '/vendor/illuminate/translation/lang/en/validation.php';
+        // Try to load Laravel's validation messages from possible locations
+        $validationPath = static::findValidationTranslationPath();
 
-        if (file_exists($validationPath)) {
+        if ($validationPath && file_exists($validationPath)) {
             $loader->addMessages('en', 'validation', require $validationPath);
         }
 
         return new ValidationFactory(
             new Translator($loader, 'en')
         );
+    }
+
+    /**
+     * Find the path to Laravel's validation translation file.
+     * Checks multiple possible locations to support both local development
+     * and when installed as a composer package.
+     */
+    protected static function findValidationTranslationPath(): ?string
+    {
+        try {
+            $reflector = new ReflectionClass(Translator::class);
+            $translatorPath = dirname($reflector->getFileName());
+
+            $path = dirname($translatorPath) . '/lang/en/validation.php';
+
+            if (file_exists($path)) {
+                return $path;
+            }
+        } catch (ReflectionException $e) {
+            // Continue to fallback paths
+        }
+
+        // Fallback: Check common locations
+        $possiblePaths = [
+            // When this package is installed in a project
+            dirname(__DIR__, 4) . '/illuminate/translation/lang/en/validation.php',
+            // When developing locally
+            dirname(__DIR__, 2) . '/vendor/illuminate/translation/lang/en/validation.php',
+            // Laravel project structure
+            dirname(__DIR__, 4) . '/laravel/framework/src/Illuminate/Translation/lang/en/validation.php',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**
