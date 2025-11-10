@@ -50,8 +50,17 @@ trait HandlesValidation
      */
     public static function validatorFactory(): ValidationFactory
     {
+        $loader = new ArrayLoader();
+
+        // Load Laravel's validation messages
+        $validationPath = dirname(__DIR__, 2) . '/vendor/illuminate/translation/lang/en/validation.php';
+
+        if (file_exists($validationPath)) {
+            $loader->addMessages('en', 'validation', require $validationPath);
+        }
+
         return new ValidationFactory(
-            new Translator(new ArrayLoader(), 'en')
+            new Translator($loader, 'en')
         );
     }
 

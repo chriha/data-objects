@@ -30,8 +30,9 @@ it('throws an exception, if the passed rules fail validation', function (): void
         public string $name;
     };
 
-    $class::from(['name' => 'some name']);
-})->expectExceptionMessage('validation.max.string');
+    expect(static fn (): never => $class::from(['name' => 'some name']))
+        ->toThrow(ValidationException::class, 'The name field must not be greater than 2 characters.');
+});
 
 it('validates the input according to the specified rules', function (): void {
     $class = new class () extends DataObject {
@@ -53,10 +54,10 @@ it('validates the whole input before filling the object', function (array $input
 
     expect($exception)->toBeInstanceOf(ValidationException::class)
         ->and($exception->errors())->toBe([
-            'name' => ['validation.required'],
-            'age' => ['validation.max.numeric'],
-            'gender' => ['validation.in'],
-            'email' => ['validation.required'],
+            'name' => ['The name field is required.'],
+            'age' => ['The age field must not be greater than 30.'],
+            'gender' => ['The selected gender is invalid.'],
+            'email' => ['The email field is required.'],
         ]);
 })->with([
     'invalid-input' => [

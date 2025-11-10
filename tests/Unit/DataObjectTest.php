@@ -76,7 +76,7 @@ it('allows to modify raw input in beforeFill', function (): void {
         ->toBe('John Doe')
         ->and($do->age)
         ->toBe(32);
-})->todo();
+});
 
 it('keeps raw input if nothing to return from beforeFill', function (): void {
     $do = new class () extends DataObject {
@@ -93,6 +93,4 @@ it('keeps raw input if nothing to return from beforeFill', function (): void {
     };
 
     $do->fill(['name' => null, 'age' => null]);
-})
-    ->throws(InvalidArgumentException::class)
-    ->todo();
+})->throws(InvalidArgumentException::class);
