@@ -43,8 +43,12 @@ it('throws an exception in another language, if the passed rules fail validation
         public string $name;
     };
 
-    expect(static fn (): never => $class::from(['name' => 'some name']))
-        ->toThrow(ValidationException::class, 'Das Feld name darf nicht mehr als 2 Charaktäre haben.');
+    try {
+        expect(static fn (): never => $class::from(['name' => 'some name']))
+            ->toThrow(ValidationException::class, 'Das Feld name darf nicht mehr als 2 Zeichen haben.');
+    } finally {
+        DataObject::resetValidationSettings();
+    }
 });
 
 it("throws an exception with translation path, if translation cannot be found", function (): void {
@@ -55,8 +59,12 @@ it("throws an exception with translation path, if translation cannot be found", 
         public string $name;
     };
 
-    expect(static fn (): never => $class::from(['name' => 'some name']))
-        ->toThrow(ValidationException::class, 'validation.max.string');
+    try {
+        expect(static fn (): never => $class::from(['name' => 'some name']))
+            ->toThrow(ValidationException::class, 'validation.max.string');
+    } finally {
+        DataObject::resetValidationSettings();
+    }
 });
 
 it('validates the input according to the specified rules', function (): void {

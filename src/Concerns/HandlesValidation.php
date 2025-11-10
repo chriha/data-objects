@@ -2,6 +2,7 @@
 
 namespace Chriha\DataObjects\Concerns;
 
+use Chriha\DataObjects\Attributes\Ignore;
 use Chriha\DataObjects\Attributes\Rules;
 use Chriha\DataObjects\DataObject;
 use Chriha\DataObjects\Exceptions\NoMappingKeyFoundException;
@@ -20,12 +21,14 @@ trait HandlesValidation
     /**
      * The locale to use for validation translations.
      */
+    #[Ignore]
     protected static string $validationLocale = 'en';
 
     /**
      * Custom path to validation translations.
      * If set, this takes precedence over auto-detection.
      */
+    #[Ignore]
     protected static ?string $customValidationTranslationPath = null;
 
     /**
@@ -76,9 +79,18 @@ trait HandlesValidation
      * Set a custom path to validation translations.
      * The path should point to a PHP file that returns an array of validation messages.
      */
-    public static function setValidationTranslationPath(string $path): void
+    public static function setValidationTranslationPath(?string $path): void
     {
         static::$customValidationTranslationPath = $path;
+    }
+
+    /**
+     * Reset validation settings to defaults.
+     */
+    public static function resetValidationSettings(): void
+    {
+        static::$validationLocale = 'en';
+        static::$customValidationTranslationPath = null;
     }
 
     /**
