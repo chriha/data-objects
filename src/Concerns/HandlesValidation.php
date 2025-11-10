@@ -18,6 +18,17 @@ use ReflectionException;
 trait HandlesValidation
 {
     /**
+     * The locale to use for validation translations.
+     */
+    protected static string $validationLocale = 'en';
+
+    /**
+     * Custom path to validation translations.
+     * If set, this takes precedence over auto-detection.
+     */
+    protected static ?string $customValidationTranslationPath = null;
+
+    /**
      * @throws NoMappingKeyFoundException
      */
     private function validateInput(ReflectionClass $reflect): void
@@ -46,22 +57,48 @@ trait HandlesValidation
     }
 
     /**
+     * Set the locale for validation translations.
+     */
+    public static function setValidationLocale(string $locale): void
+    {
+        static::$validationLocale = $locale;
+    }
+
+    /**
+     * Get the current validation locale.
+     */
+    public static function getValidationLocale(): string
+    {
+        return static::$validationLocale;
+    }
+
+    /**
+     * Set a custom path to validation translations.
+     * The path should point to a PHP file that returns an array of validation messages.
+     */
+    public static function setValidationTranslationPath(string $path): void
+    {
+        static::$customValidationTranslationPath = $path;
+    }
+
+    /**
      * Get the Validator Factory. If none was set, a minimal default is created
-     * using an ArrayLoader-backed Translator with the "en" locale.
+     * using an ArrayLoader-backed Translator with the configured locale.
      */
     public static function validatorFactory(): ValidationFactory
     {
         $loader = new ArrayLoader();
+        $locale = static::$validationLocale;
 
         // Try to load Laravel's validation messages from possible locations
-        $validationPath = static::findValidationTranslationPath();
+        $validationPath = static::findValidationTranslationPath($locale);
 
         if ($validationPath && file_exists($validationPath)) {
-            $loader->addMessages('en', 'validation', require $validationPath);
+            $loader->addMessages($locale, 'validation', require $validationPath);
         }
 
         return new ValidationFactory(
-            new Translator($loader, 'en')
+            new Translator($loader, $locale)
         );
     }
 
@@ -70,13 +107,18 @@ trait HandlesValidation
      * Checks multiple possible locations to support both local development
      * and when installed as a composer package.
      */
-    protected static function findValidationTranslationPath(): ?string
+    protected static function findValidationTranslationPath(string $locale): ?string
     {
+        // If custom path is set, use it
+        if (static::$customValidationTranslationPath !== null) {
+            return static::$customValidationTranslationPath;
+        }
+
         try {
             $reflector = new ReflectionClass(Translator::class);
             $translatorPath = dirname($reflector->getFileName());
 
-            $path = dirname($translatorPath) . '/lang/en/validation.php';
+            $path = dirname($translatorPath) . "/lang/{$locale}/validation.php";
 
             if (file_exists($path)) {
                 return $path;
@@ -88,11 +130,11 @@ trait HandlesValidation
         // Fallback: Check common locations
         $possiblePaths = [
             // When this package is installed in a project
-            dirname(__DIR__, 4) . '/illuminate/translation/lang/en/validation.php',
+            dirname(__DIR__, 4) . "/illuminate/translation/lang/{$locale}/validation.php",
             // When developing locally
-            dirname(__DIR__, 2) . '/vendor/illuminate/translation/lang/en/validation.php',
+            dirname(__DIR__, 2) . "/vendor/illuminate/translation/lang/{$locale}/validation.php",
             // Laravel project structure
-            dirname(__DIR__, 4) . '/laravel/framework/src/Illuminate/Translation/lang/en/validation.php',
+            dirname(__DIR__, 4) . "/laravel/framework/src/Illuminate/Translation/lang/{$locale}/validation.php",
         ];
 
         foreach ($possiblePaths as $path) {

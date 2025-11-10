@@ -34,6 +34,31 @@ it('throws an exception, if the passed rules fail validation', function (): void
         ->toThrow(ValidationException::class, 'The name field must not be greater than 2 characters.');
 });
 
+it('throws an exception in another language, if the passed rules fail validation', function (): void {
+    DataObject::setValidationLocale('de');
+    DataObject::setValidationTranslationPath(dirname(__DIR__, 2) . '/Fixtures/Lang/de.php');
+
+    $class = new class () extends DataObject {
+        #[Rules(['required', 'max:2'])]
+        public string $name;
+    };
+
+    expect(static fn (): never => $class::from(['name' => 'some name']))
+        ->toThrow(ValidationException::class, 'Das Feld name darf nicht mehr als 2 Charaktäre haben.');
+});
+
+it("throws an exception with translation path, if translation cannot be found", function (): void {
+    DataObject::setValidationLocale('de');
+
+    $class = new class () extends DataObject {
+        #[Rules(['required', 'max:2'])]
+        public string $name;
+    };
+
+    expect(static fn (): never => $class::from(['name' => 'some name']))
+        ->toThrow(ValidationException::class, 'validation.max.string');
+});
+
 it('validates the input according to the specified rules', function (): void {
     $class = new class () extends DataObject {
         #[Rules(['string', 'max:2'])]
