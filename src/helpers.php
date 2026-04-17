@@ -1,6 +1,10 @@
 <?php
 
-if (! function_exists('is_empty')) {
+namespace Chriha\DataObjects;
+
+use Countable;
+
+if (! function_exists('Chriha\DataObjects\is_empty')) {
     function is_empty(mixed $value, string|int|null $key = null): bool
     {
         if ($value instanceof Countable) {

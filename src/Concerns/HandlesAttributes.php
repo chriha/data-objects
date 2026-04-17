@@ -12,6 +12,8 @@ use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
 
+use function Chriha\DataObjects\is_empty;
+
 trait HandlesAttributes
 {
     /**

@@ -13,6 +13,8 @@ use Illuminate\Validation\Validator;
 use ReflectionClass;
 use ReflectionException;
 
+use function Chriha\DataObjects\is_empty;
+
 /**
  * @mixin DataObject
  */

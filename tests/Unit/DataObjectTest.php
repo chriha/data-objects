@@ -3,6 +3,8 @@
 use Chriha\DataObjects\DataObject;
 use Tests\Fixtures\Classes\Person;
 
+use function Chriha\DataObjects\is_empty;
+
 it('serializes nested DataObject', function (): void {
     $object = Person::from([
         'name' => 'Homer Simpson',
